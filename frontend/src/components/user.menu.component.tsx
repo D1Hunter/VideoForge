@@ -1,7 +1,7 @@
 import { Avatar, Box, Button, Typography } from "@mui/material"
 import { authAPI } from "../services/auth.service";
 import { useEffect } from "react";
-import { setUser } from "../store/reducers/user-slice";
+import { setUser, setAuth } from "../store/reducers/user-slice";
 import { useAppDispatch } from "../hooks/redux";
 
 interface IUserMenuProps {
@@ -12,6 +12,9 @@ export const UserMenu = ({email}:IUserMenuProps) => {
     const dispatch = useAppDispatch();
     const [logout,{isSuccess}] = authAPI.useLogoutMutation();
     const logoutFunc = ()=>{
+        localStorage.removeItem('token');
+        dispatch(setAuth({value:false}));
+        console.log("Logout")
         logout(null)
     }
     useEffect(()=>{
@@ -31,7 +34,7 @@ export const UserMenu = ({email}:IUserMenuProps) => {
             <Avatar>
                 {email[0].toLocaleUpperCase()}
             </Avatar>
-            <Button onClick={()=>logoutFunc()}>Logout</Button>
+            <Button onClick={()=>logoutFunc()}></Button>
         </Box>
     )
 }

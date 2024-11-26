@@ -1,5 +1,6 @@
-import { AllowNull, Column, DataType, Default, HasOne, Model, PrimaryKey, Table, Unique } from "sequelize-typescript";
+import { AllowNull, Column, DataType, Default, HasMany, HasOne, Model, PrimaryKey, Table, Unique } from "sequelize-typescript";
 import { Token } from "../auth/token.model";
+import { Project } from "../project/project.model";
 
 @Table
 export class User extends Model {
@@ -31,4 +32,7 @@ export class User extends Model {
 
     @HasOne(()=>Token)
     token:Token;
+    
+    @HasMany(()=>Project)
+    projects:Project[];
 }

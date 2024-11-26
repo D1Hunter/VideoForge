@@ -3,6 +3,7 @@ import { Button, Container, Link, Paper, Stack, TextField, Typography } from "@m
 import { useAppDispatch } from "../../hooks/redux";
 import { setUser } from "../../store/reducers/user-slice";
 import { authAPI } from "../../services/auth.service";
+import styles from './login.module.css'
 
 const Login = () => {
     const dispatch = useAppDispatch();
@@ -26,7 +27,7 @@ const Login = () => {
     }
 
     return (
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" className={styles.login}>
             <Paper elevation={10} sx={{p:10}}>
                 <Stack spacing={2}>
                     <Typography component="h1" variant="h5">Sign in</Typography>

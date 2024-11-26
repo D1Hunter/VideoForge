@@ -14,7 +14,7 @@ export class ProjectService {
     }
 
     async findAllProjectsByUser(userId: string): Promise<Project[]> {
-        return this.prjectRepository.findMany({ where: { userId }, include: ['videos'] });
+        return this.prjectRepository.findMany({ where: { userId } });
     }
 
     async findProjectById(id: string): Promise<Project> {

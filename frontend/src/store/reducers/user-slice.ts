@@ -23,9 +23,12 @@ export const userSlice = createSlice({
             state.user.id = action.payload.id
             state.user.email = action.payload.email
             state.isAuth = true
+        },
+        setAuth:(state, action: PayloadAction<{value:boolean}>) =>{
+            state.isAuth = action.payload.value
         }
     }
 })
 
-export const { setUser } = userSlice.actions;
+export const { setUser, setAuth } = userSlice.actions;
 export default userSlice.reducer;

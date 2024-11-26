@@ -1,25 +1,26 @@
-import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model } from "sequelize-typescript";
+import { AllowNull, BelongsTo, Column, DataType, Default, ForeignKey, HasMany, Model, PrimaryKey, Table, Unique } from "sequelize-typescript";
 import { User } from "../user/user.model";
 
+@Table
 export class Project extends Model {
-    @Column({
-        type: DataType.STRING,
-        allowNull: false,
-    })
-    name: string;
+    @PrimaryKey
+    @Unique
+    @Default(DataType.UUIDV4)
+    @Column(DataType.UUID)
+    id: string;
 
-    @Column({
-        type: DataType.TEXT,
-        allowNull: true,
-    })
+    @AllowNull(false)
+    @Column({type: DataType.STRING})
+    title: string;
+
+    @AllowNull(true)
+    @Column({type: DataType.STRING})
     description: string;
 
     @ForeignKey(() => User)
-    @Column({
-        type: DataType.INTEGER,
-        allowNull: false,
-    })
-    userId: number;
+    @AllowNull(false)
+    @Column(DataType.UUID)
+    userId: string;
 
     @BelongsTo(() => User)
     user: User;

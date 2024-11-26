@@ -17,7 +17,6 @@ export const useWasm = (wasmPath: string) => {
       };
   
       loadWasm();
-      console.log(wasmInstance);
     }, [wasmPath]);
   
     return wasmInstance;

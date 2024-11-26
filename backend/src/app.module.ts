@@ -9,11 +9,13 @@ import { PassportModule } from "@nestjs/passport";
 import { UserModule } from "./modules/user/user.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { JwtStrategy } from "./modules/auth/strategies/jwt.strategy";
+import { Project } from './modules/project/project.model';
+import { ProjectModule } from './modules/project/project.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: ['.env.development'],
+      envFilePath: ['.env'],
       load: [configurations]
     }),
     SequelizeModule.forRootAsync({
@@ -31,12 +33,14 @@ import { JwtStrategy } from "./modules/auth/strategies/jwt.strategy";
         models: [
           User,
           Token,
+          Project
         ]
       })
     }),
     PassportModule,
     UserModule,
-    AuthModule],
+    AuthModule,
+  ProjectModule],
   providers: [JwtStrategy],
 })
 

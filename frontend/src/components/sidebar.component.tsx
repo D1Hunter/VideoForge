@@ -1,5 +1,5 @@
 import { Box, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography } from "@mui/material"
-import { MenuOutlined } from "@mui/icons-material"
+import { Camera, MenuOutlined } from "@mui/icons-material"
 import { useState } from "react";
 const drawerWidth = 240;
 
@@ -33,8 +33,9 @@ export const SideBar = ({ menuItems }: SideBarProps) => {
                 <Box display="flex" alignItems="center" justifyContent="center" padding={2}>
                     {!isCollapsed && (
                         <Box display="flex" alignItems="center">
+                            <Camera/>
                             <Typography variant="h6">
-                                VideForge
+                                VideoForge
                             </Typography>
                         </Box>
                     )}

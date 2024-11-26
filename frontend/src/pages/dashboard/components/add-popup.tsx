@@ -13,18 +13,17 @@ import { IProject } from "../../../interfaces/project.interface";
 interface AddTransactionPopupProps {
     open: boolean;
     onClose: () => void;
-    onAddProject: (project: IProject) => void;
+    onAddProject: (project: Omit<IProject,"id"|"createdAt">) => void;
 }
 
 const AddProjectPopup = ({ open, onClose, onAddProject }: AddTransactionPopupProps) => {
-    const [name, setName] = useState("");
+    const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
 
     const handleAddProject = () => {
-        if (name && description) {
+        if (title && description) {
             onAddProject({
-                id: "",
-                name,
+                title,
                 description
             });
             onClose();
@@ -44,8 +43,8 @@ const AddProjectPopup = ({ open, onClose, onAddProject }: AddTransactionPopupPro
                         variant="outlined"
                         fullWidth
                         margin="normal"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
                     />
                     <TextField
                         label="Project Description"

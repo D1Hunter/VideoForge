@@ -1,4 +1,4 @@
-import { Column, DataType, ForeignKey, Model, PrimaryKey, Table, Unique } from "sequelize-typescript";
+import { AllowNull, Column, DataType, ForeignKey, Model, PrimaryKey, Table, Unique } from "sequelize-typescript";
 import { User } from "../user/user.model";
 
 @Table
@@ -9,5 +9,7 @@ export class Token extends Model {
     accessToken:string;
 
     @ForeignKey(()=>User)
-    userId:User;
+    @AllowNull(false)
+    @Column({type: DataType.STRING})
+    userId:string;
 }

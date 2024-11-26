@@ -10,8 +10,8 @@ const Root: FC = () => {
 
     const menuItems = [
         { text: "Home", icon: <Home />, onclick: () => navigate("/") },
-        { text: "Settings", icon: <Settings />, onclick: () => navigate("/settings") },
-        { text: "Editor", icon: <Theaters />, onclick: () => navigate("/editor") }
+        { text: "Editor", icon: <Theaters />, onclick: () => navigate("/editor") },
+        { text: "Settings", icon: <Settings />, onclick: () => navigate("/settings") }
     ];
 
     return (

@@ -1,59 +1,93 @@
-import { Box, Button, Card, CardActions, CardContent, Grid2 as Grid, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, CircularProgress, Container, Grid2 as Grid, Typography } from "@mui/material";
+import { useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { projectAPI } from "../../services/project.service";
 
 const ProjectPage = () => {
-    const project = {name:"Test",description:"This is a test project", videos:[{id:"12312", name:"TestVideo",description:"This is a video"}]}
+  const { projectId } = useParams();
+  const navigate = useNavigate();
+  const { data: project, isLoading, isError } = projectAPI.useFetchProjectQuery(projectId ? projectId : "");
 
-    const handleDeleteVideo = async (videoId:string) => {
-    };
-  
-    const handleAddVideo = () => {
-    };
+  useEffect(() => {
+    if (!projectId) {
+      navigate("/");
+    }
+  }, [projectId, navigate]);
 
-    return(
-        <Box padding={3}>
-        <Typography variant="h4" gutterBottom>
-          {project?.name || 'Project Name'}
-        </Typography>
-        <Typography variant="body1" gutterBottom>
-          {project?.description || 'No description provided.'}
-        </Typography>
-  
-        <Button variant="contained" color="primary" onClick={handleAddVideo}>
-          Add New Video
-        </Button>
-  
-        <Typography variant="h5" gutterBottom marginTop={3}>
-          Videos
-        </Typography>
-        <Grid container spacing={2}>
-          {project?.videos?.length > 0 ? (
-            project.videos.map((video) => (
-              <Grid size={{xs:12,sm:6,md:4}} key={video.id}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6">{video.name}</Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {video.description || 'No description available'}
-                    </Typography>
-                  </CardContent>
-                  <CardActions>
-                    <Button
-                      size="small"
-                      color="secondary"
-                      onClick={() => handleDeleteVideo(video.id)}
-                    >
-                      Delete
-                    </Button>
-                  </CardActions>
-                </Card>
-              </Grid>
-            ))
-          ) : (
-            <Typography>No videos in this project. Add some!</Typography>
-          )}
-        </Grid>
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <CircularProgress />
       </Box>
     );
-}
+  }
+
+  if (isError || !project) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          flexDirection: "column",
+        }}
+      >
+        <Typography variant="h4" color="error">
+          Project not found
+        </Typography>
+        <Button onClick={() => navigate("/")} variant="contained" sx={{ mt: 2 }}>
+          Go Back to Dashboard
+        </Button>
+      </Box>
+    );
+  }
+
+  return (
+    <Container sx={{ py: 4 }}>
+      <Typography variant="h3" gutterBottom>
+        {project.title}
+      </Typography>
+      <Typography variant="body1" color="text.secondary" paragraph>
+        {project.description}
+        <Typography variant="body1">
+          <strong>Created:</strong> {new Date(project.createdAt).toLocaleDateString()}
+        </Typography>
+      </Typography>
+
+      <Grid container spacing={3}>
+        <Grid sx={{ xs: 12, md: 6 }}>
+          <Card>
+          </Card>
+        </Grid>
+      </Grid>
+
+      <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between" }}>
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={() => navigate("/edit-project/" + project.id)}
+        >
+          Edit Project
+        </Button>
+
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={() => navigate("/")}
+        >
+          Back to Dashboard
+        </Button>
+      </Box>
+    </Container>
+  );
+};
 
 export default ProjectPage;

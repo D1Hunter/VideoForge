@@ -8,7 +8,8 @@ import { useEffect } from 'react'
 import { authAPI } from './services/auth.service'
 import { setUser } from './store/reducers/user-slice'
 import Dashboard from './pages/dashboard/dashboard'
-import EditorPage from './pages/editor/editor'
+import ProjectPage from './pages/project/project.page'
+import VideoEditorPage from './pages/video-editor/video-editor.page'
 
 function App() {
   const dispatch = useAppDispatch();
@@ -27,7 +28,7 @@ function App() {
     }
     if (error) {
       console.log(localStorage.getItem('token'));
-      //localStorage.removeItem('token');
+      localStorage.removeItem('token');
     }
   }, [data, isAuth])
 
@@ -44,8 +45,9 @@ function App() {
         </>
         :
         <Route path="/" element={<Root />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/editor" element={<EditorPage/>}/>
+          <Route path="/" element={<Dashboard />}/>
+          <Route path="/project/:projectId" element={<ProjectPage />} />
+          <Route path="/editor" element={<VideoEditorPage/>}/>
           <Route
             path="*"
             element={<Navigate to="/" replace />}
