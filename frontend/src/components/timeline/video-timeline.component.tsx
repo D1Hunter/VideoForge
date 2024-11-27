@@ -1,90 +1,67 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Slider, Typography } from "@mui/material";
 
-interface Frame {
-  time: number; // Час фрейма у секундах
-  image: string; // Base64 або URL зображення
-}
+interface TimelineProps {
+  videoDuration: number;
+  currentSecond: number;
+  frameRate: number;
+  onFrameSelect: (frame: number) => void;
+};
 
-interface VideoTimelineProps {
-  frames: Frame[];
-  duration: number;
-  currentTime: number;
-  onSeek: (time: number) => void;
-}
-const VideoTimeline: React.FC<VideoTimelineProps> = ({
-  frames,
-  duration,
-  currentTime,
-  onSeek,
+const VideoTimeline: React.FC<TimelineProps> = ({
+  videoDuration,
+  currentSecond,
+  frameRate,
+  onFrameSelect,
 }) => {
-  const cursorPosition = () => {
-    const totalWidth = 100; // Відсотки ширини таймлайну
-    return (currentTime / duration) * totalWidth;
+  const [sliderValue, setSliderValue] = useState(currentSecond * frameRate);
+  const sliderRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setSliderValue(currentSecond * frameRate);
+  }, [currentSecond]);
+
+  const handleSliderChange = (event: Event, value: number | number[]) => {
+    if (typeof value === "number") {
+      setSliderValue(value);
+    }
+  };
+
+  const handleSliderChangeCommitted = (event: Event | React.SyntheticEvent, value: number | number[]) => {
+    if (typeof value === "number") {
+      const selectedSecond = value / frameRate;
+      onFrameSelect(Math.round(selectedSecond * frameRate));
+    }
   };
 
   return (
-    <Box
-      sx={{
-        position: "relative",
-        width: "100%",
-        height: "120px",
-        bgcolor: "#333",
-        borderRadius: "8px",
-        overflow: "hidden",
-      }}
-    >
-      {/* Фрейми */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          height: "100%",
-          position: "relative",
-        }}
-      >
-        {frames.map((frame, index) => (
-          <Box
-            key={index}
-            onClick={() => onSeek(frame.time)}
-            sx={{
-              width: `${100 / frames.length}%`,
-              height: "100%",
-              position: "relative",
-              backgroundImage: `url(${frame.image})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              cursor: "pointer",
-            }}
-          >
-            <Typography
-              sx={{
-                position: "absolute",
-                bottom: "4px",
-                left: "4px",
-                color: "#fff",
-                fontSize: "10px",
-                textShadow: "1px 1px 2px rgba(0,0,0,0.7)",
-              }}
-            >
-              {frame.time.toFixed(1)}с
-            </Typography>
-          </Box>
-        ))}
+    <Box sx={{ padding: 2, position: "relative" }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", marginBottom: 1 }}>
+        <Typography variant="body2">{new Date(currentSecond * 1000).toISOString().substr(14, 5)}</Typography>
+        <Typography variant="body2">{new Date(videoDuration * 1000).toISOString().substr(14, 5)}</Typography>
       </Box>
 
-      {/* Вертикальна лінія (курсор) */}
-      <Box
+      <Slider
+        ref={sliderRef}
+        value={sliderValue}
+        min={0}
+        max={videoDuration * frameRate}
+        step={1}
+        onChange={handleSliderChange}
+        onChangeCommitted={handleSliderChangeCommitted}
         sx={{
-          position: "absolute",
-          top: 0,
-          bottom: 0,
-          left: `${cursorPosition()}%`,
-          width: "2px",
-          bgcolor: "red",
-          pointerEvents: "none",
+          '& .MuiSlider-thumb': {
+            width: 12,
+            height: 12,
+          },
+          '& .MuiSlider-track': {
+            height: 4,
+          },
+          '& .MuiSlider-rail': {
+            height: 4,
+          },
         }}
-      ></Box>
+      />
     </Box>
   );
 };

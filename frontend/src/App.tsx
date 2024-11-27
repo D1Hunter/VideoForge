@@ -28,7 +28,7 @@ function App() {
     }
     if (error) {
       console.log(localStorage.getItem('token'));
-      localStorage.removeItem('token');
+      //localStorage.removeItem('token');
     }
   }, [data, isAuth])
 

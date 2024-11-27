@@ -1,8 +1,7 @@
 import { Add as AddIcon } from "@mui/icons-material";
 import { Box, Button, Container, IconButton, Slider, Typography } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
-import VideoTimeline from "../../components/timeline/video-timeline.component";
-import Timeline from "./components/timeline.component";
+import Timeline from "../../components/timeline/video-timeline.component";
 
 interface Frame {
     time: number; // Час кадру у секундах
@@ -10,16 +9,17 @@ interface Frame {
 }
 
 const VideoEditorPage: React.FC = () => {
-    const [videoFile, setVideoFile] = useState<string | null>(null); // Завантажене відео
-    const [frames, setFrames] = useState<Frame[]>([]); // Масив кадрів
-    const [duration, setDuration] = useState<number>(0); // Загальна тривалість відео
+    const [videoFile, setVideoFile] = useState<string | null>(null);
+    const [frames, setFrames] = useState<Frame[]>([]);
+    const [duration, setDuration] = useState<number>(0);
     const [currentTime, setCurrentTime] = useState<number>(0);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
-    const handleFrameSelect = (time: number) => {
+    const handleFrameSelect = (frame: number) => {
+        const time = frame / 24;
         if (videoRef.current) {
-            videoRef.current.currentTime = time; // Оновлюємо час відео
+            videoRef.current.currentTime = time;
         }
     };
 
@@ -38,64 +38,8 @@ const VideoEditorPage: React.FC = () => {
         if (videoRef.current) {
             const video = videoRef.current;
             setDuration(video.duration); // Встановлюємо тривалість відео
-            console.log("Extract frames start");
-            processFrames(); // Витягуємо кадри (20 кадрів як приклад)
         }
     };
-
-    const processFrames = async () => {
-        const video = videoRef.current;
-        if (!video) return;
-
-        // Wait for video metadata to be ready
-        await new Promise<void>((resolve) => {
-          if (video.readyState >= 1) {
-            resolve();
-          } else {
-            video.addEventListener("loadedmetadata", () => resolve(), { once: true });
-          }
-        });
-    
-        const frameRate = 5; // Frames per second (adjustable)
-        const duration = video.duration;
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-    
-        if (!ctx) {
-          console.error("Canvas rendering context not available.");
-          return;
-        }
-    
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-    
-        const framePromises: Promise<Frame>[] = [];
-    
-        for (let time = 0; time < duration; time += 1 / frameRate) {
-          framePromises.push(
-            new Promise<Frame>((resolve) => {
-              video.currentTime = time;
-    
-              // Wait for video to seek and render
-              video.addEventListener(
-                "seeked",
-                () => {
-                  // Small delay to ensure the frame is rendered
-                  setTimeout(() => {
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    const image = canvas.toDataURL("image/png"); // Convert to base64 image
-                    resolve({ time, image }); // Return time and image as Frame
-                  }, 50); // Adjust delay if frames are still black
-                },
-                { once: true }
-              );
-            })
-          );
-        }
-    
-        const allFrames = await Promise.all(framePromises);
-        setFrames(allFrames); // Update state with extracted frames
-      };
 
     useEffect(() => {
 
@@ -164,7 +108,12 @@ const VideoEditorPage: React.FC = () => {
                 />
             </Box>
 
-            <Timeline frames={frames} isPlaying={isPlaying} currentTime={currentTime} onFrameSelect={handleFrameSelect} onPlayFromFrame={handlePlayFromFrame} onTogglePlayPause={handleTogglePlayPause} />
+            <Timeline
+                videoDuration={duration}
+                currentSecond={currentTime}
+                onFrameSelect={handleFrameSelect}
+                frameRate={24}
+            />
         </Container>
     );
 };
