@@ -96,6 +96,10 @@ const Dashboard = () => {
                 justifyContent: "center",
                 border: "1px dashed #ccc",
                 alignItems: "center",
+                transition: "transform 0.2s ease-in-out",
+                '&:hover': {
+                  transform: 'scale(1.1)',
+                },
               }}
               onClick={() => setOpenPopup(true)}
             >

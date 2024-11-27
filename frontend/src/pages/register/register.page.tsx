@@ -2,6 +2,7 @@ import { Button, Container, Link, Paper, Stack, TextField, Typography } from "@m
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authAPI } from "../../services/auth.service";
+import styles from "./register.module.css";
 
 const Register = () => {
     const [email, setEmail] = useState('');
@@ -24,7 +25,7 @@ const Register = () => {
     }
     
     return (
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" className={styles.register}>
             <Paper elevation={10} sx={{p:10}}>
                 <Stack spacing={2}>
                     <Typography component="h1" variant="h5">Sign up</Typography>
