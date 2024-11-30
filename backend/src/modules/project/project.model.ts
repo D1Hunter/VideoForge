@@ -1,5 +1,6 @@
 import { AllowNull, BelongsTo, Column, DataType, Default, ForeignKey, HasMany, Model, PrimaryKey, Table, Unique } from "sequelize-typescript";
 import { User } from "../user/user.model";
+import { Video } from "../video/video.model";
 
 @Table
 export class Project extends Model {
@@ -24,4 +25,7 @@ export class Project extends Model {
 
     @BelongsTo(() => User)
     user: User;
+
+    @HasMany(()=>Video)
+    videos:Video[];
 }

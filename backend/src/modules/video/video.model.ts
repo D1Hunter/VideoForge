@@ -1,6 +1,7 @@
-import { AllowNull, BelongsTo, Column, DataType, Default, ForeignKey, Model, PrimaryKey, Unique } from "sequelize-typescript";
+import { AllowNull, BelongsTo, Column, DataType, Default, ForeignKey, Model, PrimaryKey, Table, Unique } from "sequelize-typescript";
 import { Project } from "../project/project.model";
 
+@Table
 export class Video extends Model {
     @PrimaryKey
     @Unique
@@ -20,10 +21,14 @@ export class Video extends Model {
     @Column(DataType.STRING)
     duration: number;
 
+    @AllowNull(false)
+    @Column(DataType.INTEGER)
+    fileSize: number;
+
     @ForeignKey(() => Project)
     @AllowNull(false)
-    @Column(DataType.STRING)
-    projectId: number;
+    @Column(DataType.UUID) 
+    projectId: string;
 
     @BelongsTo(() => Project)
     project: Project;

@@ -10,6 +10,7 @@ import { setUser } from './store/reducers/user-slice'
 import Dashboard from './pages/dashboard/dashboard'
 import ProjectPage from './pages/project/project.page'
 import VideoEditorPage from './pages/video-editor/video-editor.page'
+import ImageUploadPage from './pages/image/image-upload'
 
 function App() {
   const dispatch = useAppDispatch();
@@ -47,7 +48,7 @@ function App() {
         <Route path="/" element={<Root />}>
           <Route path="/" element={<Dashboard />}/>
           <Route path="/project/:projectId" element={<ProjectPage />} />
-          <Route path="/editor" element={<VideoEditorPage/>}/>
+          <Route path="/editor" element={<ImageUploadPage/>}/>
           <Route
             path="*"
             element={<Navigate to="/" replace />}

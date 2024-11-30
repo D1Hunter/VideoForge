@@ -2,6 +2,7 @@ import { Add as AddIcon } from "@mui/icons-material";
 import { Box, Button, Container, IconButton, Slider, Typography } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import Timeline from "../../components/timeline/video-timeline.component";
+import { useWasm } from "../../wasm/useWasm";
 
 interface Frame {
     time: number; // Час кадру у секундах
@@ -23,7 +24,6 @@ const VideoEditorPage: React.FC = () => {
         }
     };
 
-    // Завантаження відео
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file && file.type.startsWith("video/")) {
@@ -33,11 +33,10 @@ const VideoEditorPage: React.FC = () => {
         }
     };
 
-    // Завантаження метаданих відео
     const handleVideoLoaded = () => {
         if (videoRef.current) {
             const video = videoRef.current;
-            setDuration(video.duration); // Встановлюємо тривалість відео
+            setDuration(video.duration);
         }
     };
 
@@ -107,7 +106,6 @@ const VideoEditorPage: React.FC = () => {
                     onTimeUpdate={handleTimeUpdate}
                 />
             </Box>
-
             <Timeline
                 videoDuration={duration}
                 currentSecond={currentTime}

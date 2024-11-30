@@ -11,6 +11,9 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { JwtStrategy } from "./modules/auth/strategies/jwt.strategy";
 import { Project } from './modules/project/project.model';
 import { ProjectModule } from './modules/project/project.module';
+import { VideoModule } from './modules/video/video.module';
+import { Video } from './modules/video/video.model';
+import { FileUploadModule } from './modules/file-upload/file-upload.module';
 
 @Module({
   imports: [
@@ -33,14 +36,17 @@ import { ProjectModule } from './modules/project/project.module';
         models: [
           User,
           Token,
-          Project
+          Project,
+          Video
         ]
       })
     }),
     PassportModule,
     UserModule,
     AuthModule,
-  ProjectModule],
+  ProjectModule,
+VideoModule,
+FileUploadModule],
   providers: [JwtStrategy],
 })
 
