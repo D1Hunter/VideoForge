@@ -1,119 +1,168 @@
-import { Add as AddIcon } from "@mui/icons-material";
-import { Box, Button, Container, IconButton, Slider, Typography } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
-import Timeline from "../../components/timeline/video-timeline.component";
-import { useWasm } from "../../wasm/useWasm";
+import { Box, Button, Card, CardContent, CardMedia, CircularProgress, Container, Typography } from "@mui/material";
+import { FC, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { videoAPI } from "../../services/video.service";
+import VideoTimeline from "../../components/timeline/video-timeline.component";
 
 interface Frame {
-    time: number; // Час кадру у секундах
-    image: string; // Зображення кадру (base64 або URL)
+  time: number;
+  image: string;
 }
 
-const VideoEditorPage: React.FC = () => {
-    const [videoFile, setVideoFile] = useState<string | null>(null);
-    const [frames, setFrames] = useState<Frame[]>([]);
-    const [duration, setDuration] = useState<number>(0);
-    const [currentTime, setCurrentTime] = useState<number>(0);
-    const [isPlaying, setIsPlaying] = useState<boolean>(false);
-    const videoRef = useRef<HTMLVideoElement | null>(null);
+interface EditorProps {
+  id?: string;
+  title?: string;
+  duration?: number;
+}
 
-    const handleFrameSelect = (frame: number) => {
-        const time = frame / 24;
-        if (videoRef.current) {
-            videoRef.current.currentTime = time;
-        }
-    };
+const EditorPage: FC<EditorProps> = ({ id, title, duration }) => {
+  const { videoId } = useParams<{ videoId: string }>();
+  const navigate = useNavigate();
 
-    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file && file.type.startsWith("video/")) {
-            setVideoFile(URL.createObjectURL(file));
-        } else {
-            alert("Please upload a valid video file.");
-        }
-    };
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [videoDuration, setVideoDuration] = useState(duration || 0);
+  const [currentSecond, setCurrentSecond] = useState(0);
+  const [interval, setInterval] = useState<[number, number]>([0, 300]);
 
-    const handleVideoLoaded = () => {
-        if (videoRef.current) {
-            const video = videoRef.current;
-            setDuration(video.duration);
-        }
-    };
+  const { data: videoBlob, isLoading: isFetching, error: fetchError } = videoAPI.useFetchVideoByIdQuery(videoId || "");
 
-    useEffect(() => {
+  const [uploadVideo, { isLoading: isUploading, error: uploadError }] = videoAPI.useUploadVideoMutation();
 
-    }, [frames, isPlaying])
+  useEffect(() => {
+    if (videoBlob) {
+      const url = URL.createObjectURL(videoBlob);
+      setFilePreview(url);
 
-    const handlePlayFromFrame = (time: number) => {
-        if (videoRef.current) {
-            videoRef.current.currentTime = time;
-            videoRef.current.play();
-            setIsPlaying(true);
-        }
-    };
-
-    const handleTimeUpdate = () => {
-        if (videoRef.current) {
-            setCurrentTime(videoRef.current.currentTime);
-        }
-    };
-
-    if (!videoFile) {
-        return (
-            <Container sx={{ mt: 4, textAlign: "center" }}>
-                <>
-                    <IconButton
-                        color="default"
-                        size="large"
-                        component="label"
-                        sx={{ backgroundColor: "blue" }}
-                    >
-                        <AddIcon fontSize="large" />
-                        <input
-                            type="file"
-                            accept="video/*"
-                            hidden
-                            onChange={handleFileUpload}
-                        />
-                    </IconButton>
-                    <Typography>Click to upload video</Typography>
-                </>
-            </Container>
-        );
+      return () => {
+        URL.revokeObjectURL(url);
+      };
     }
+  }, [videoBlob]);
 
-    const handleTogglePlayPause = () => {
-        if (videoRef.current) {
-            if (isPlaying) {
-                videoRef.current.pause();
-            } else {
-                videoRef.current.play();
-            }
-            setIsPlaying(!isPlaying); // Перемикаємо стан
-        }
-    };
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const formData = new FormData();
+      formData.append("file", file);
 
+      try {
+        const response = await uploadVideo({ formData, projectId: videoId || "" }).unwrap();
+        setFilePreview(response.filePath);
+        setUploadedFile(file);
+      } catch (err) {
+        console.error("Error uploading video:", err);
+      }
+    }
+  };
+
+  if (!videoId && !filePreview) {
     return (
-        <Container sx={{ mt: 4 }}>
-
-            <Box sx={{ mb: 4 }}>
-                <video
-                    ref={videoRef}
-                    src={videoFile}
-                    controls
-                    style={{ width: "100%", borderRadius: "8px" }}
-                    onLoadedMetadata={handleVideoLoaded}
-                    onTimeUpdate={handleTimeUpdate}
-                />
-            </Box>
-            <Timeline
-                videoDuration={duration}
-                currentSecond={currentTime}
-                onFrameSelect={handleFrameSelect}
-                frameRate={24}
-            />
-        </Container>
+      <Container sx={{ py: 4 }}>
+        <Typography variant="h3" gutterBottom>
+          Upload Video
+        </Typography>
+        <Box sx={{ mt: 4, display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <Button variant="contained" component="label">
+            Choose Video
+            <input type="file" accept="video/*" hidden onChange={handleFileChange} />
+          </Button>
+          {isUploading && <CircularProgress sx={{ mt: 2 }} />}
+          {uploadError && (
+            <Typography color="error" variant="body1" sx={{ mt: 2 }}>
+              Failed to upload video
+            </Typography>
+          )}
+        </Box>
+      </Container>
     );
+  }
+
+  if (isFetching) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          flexDirection: "column",
+        }}
+      >
+        <Typography variant="h4" color="error">
+          Failed to load video
+        </Typography>
+        <Button onClick={() => navigate("/")} variant="contained" sx={{ mt: 2 }}>
+          Go Back to Dashboard
+        </Button>
+      </Box>
+    );
+  }
+
+  const handleChange = (event: Event | React.SyntheticEvent, newValue: number | number[]) => {
+    setInterval(newValue as [number, number]); // Update the interval
+  };
+
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <Container sx={{ py: 4 }}>
+      <Typography variant="h3" gutterBottom>
+        {videoId ? "Edit Video" : "Upload Video"}
+      </Typography>
+
+      <Box sx={{ mt: 4, display: "flex", flexDirection: "column", alignItems: "center" }}>
+        {filePreview && (
+          <Card sx={{ mb: 4 }}>
+            <CardMedia
+              component="video"
+              src={filePreview}
+              controls
+              sx={{ height: 400 }}
+            />
+            <CardContent>
+              <Typography variant="h6">{uploadedFile ? uploadedFile.name : "Existing Video"}</Typography>
+            </CardContent>
+          </Card>
+        )}
+
+        <Button variant="contained" component="label">
+          {videoId ? "Replace Video" : "Upload Video"}
+          <input type="file" accept="video/*" hidden onChange={handleFileChange} />
+        </Button>
+        {isUploading && <CircularProgress sx={{ mt: 2 }} />}
+        {uploadError && (
+          <Typography color="error" variant="body1" sx={{ mt: 2 }}>
+            Failed to upload video
+          </Typography>
+        )}
+      </Box>
+      <VideoTimeline
+        duration={videoDuration}
+        steps={10} value={interval}
+        onChange={handleChange}
+        formatTime={formatTime} />
+    </Container>
+  );
 };
 
-export default VideoEditorPage;
+export default EditorPage;

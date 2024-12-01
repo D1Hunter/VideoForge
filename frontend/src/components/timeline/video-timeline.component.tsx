@@ -1,67 +1,32 @@
-import React, { useRef, useState, useEffect } from "react";
-import { Box, Button, Slider, Typography } from "@mui/material";
+import { Box, Slider, Typography } from "@mui/material";
+import { useState } from "react";
 
-interface TimelineProps {
-  videoDuration: number;
-  currentSecond: number;
-  frameRate: number;
-  onFrameSelect: (frame: number) => void;
-};
+interface VideoTimelineProps {
+  duration: number;
+  steps: number;
+  value: [number, number];
+  onChange: (event: Event | React.SyntheticEvent, newValue: number | number[]) => void;
+  formatTime: (seconds: number) => string;
+}
 
-const VideoTimeline: React.FC<TimelineProps> = ({
-  videoDuration,
-  currentSecond,
-  frameRate,
-  onFrameSelect,
-}) => {
-  const [sliderValue, setSliderValue] = useState(currentSecond * frameRate);
-  const sliderRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    setSliderValue(currentSecond * frameRate);
-  }, [currentSecond]);
-
-  const handleSliderChange = (event: Event, value: number | number[]) => {
-    if (typeof value === "number") {
-      setSliderValue(value);
-    }
-  };
-
-  const handleSliderChangeCommitted = (event: Event | React.SyntheticEvent, value: number | number[]) => {
-    if (typeof value === "number") {
-      const selectedSecond = value / frameRate;
-      onFrameSelect(Math.round(selectedSecond * frameRate));
-    }
-  };
-
+const VideoTimeline: React.FC<VideoTimelineProps> = ({ duration, steps, value, onChange, formatTime }) => {
   return (
-    <Box sx={{ padding: 2, position: "relative" }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", marginBottom: 1 }}>
-        <Typography variant="body2">{new Date(currentSecond * 1000).toISOString().substr(14, 5)}</Typography>
-        <Typography variant="body2">{new Date(videoDuration * 1000).toISOString().substr(14, 5)}</Typography>
-      </Box>
-
+    <Box sx={{ width: '100%', mt: 2 }}>
+      <Typography gutterBottom>Select Time Interval</Typography>
       <Slider
-        ref={sliderRef}
-        value={sliderValue}
+        value={value}
+        onChange={onChange}
         min={0}
-        max={videoDuration * frameRate}
-        step={1}
-        onChange={handleSliderChange}
-        onChangeCommitted={handleSliderChangeCommitted}
-        sx={{
-          '& .MuiSlider-thumb': {
-            width: 12,
-            height: 12,
-          },
-          '& .MuiSlider-track': {
-            height: 4,
-          },
-          '& .MuiSlider-rail': {
-            height: 4,
-          },
-        }}
+        max={duration}
+        step={duration / steps}
+        valueLabelDisplay="auto"
+        valueLabelFormat={formatTime}
+        sx={{ mt: 2 }}
       />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+        <Typography>{formatTime(value[0])}</Typography>
+        <Typography>{formatTime(value[1])}</Typography>
+      </Box>
     </Box>
   );
 };
