@@ -44,9 +44,9 @@ import { FileUploadModule } from './modules/file-upload/file-upload.module';
     PassportModule,
     UserModule,
     AuthModule,
-  ProjectModule,
-VideoModule,
-FileUploadModule],
+    ProjectModule,
+    VideoModule,
+    FileUploadModule],
   providers: [JwtStrategy],
 })
 

@@ -1,13 +1,13 @@
-import { Box, Button, Card, CardContent, CardMedia, CircularProgress, Container, Typography } from "@mui/material";
-import { FC, useEffect, useState } from "react";
+import { Box, Button, Card, CircularProgress, Container, Typography } from "@mui/material";
+import {Save as SaveIcon, Download as DownloadIcon} from '@mui/icons-material';
+import { FC, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { videoAPI } from "../../services/video.service";
-import VideoTimeline from "../../components/timeline/video-timeline.component";
-
-interface Frame {
-  time: number;
-  image: string;
-}
+import { Control } from "../../components/";
+import { VideoFilterType } from "../../interfaces/video.interface";
+import { formatTime } from "../../utils";
+import FiltersPanel from "./components/filters-panel.component";
+import InstrumentPanel from "./components/instrument-panel.component";
 
 interface EditorProps {
   id?: string;
@@ -15,19 +15,21 @@ interface EditorProps {
   duration?: number;
 }
 
-const EditorPage: FC<EditorProps> = ({ id, title, duration }) => {
+const EditorPage: FC<EditorProps> = ({ duration }) => {
   const { videoId } = useParams<{ videoId: string }>();
   const navigate = useNavigate();
 
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [videoDuration, setVideoDuration] = useState(duration || 0);
-  const [currentSecond, setCurrentSecond] = useState(0);
-  const [interval, setInterval] = useState<[number, number]>([0, 300]);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [scaleFactor, setScaleFactor] = useState(1);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [volume, setVolume] = useState(0);
 
   const { data: videoBlob, isLoading: isFetching, error: fetchError } = videoAPI.useFetchVideoByIdQuery(videoId || "");
 
-  const [uploadVideo, { isLoading: isUploading, error: uploadError }] = videoAPI.useUploadVideoMutation();
+  const [processVideo, { data: processVideoBlob }] = videoAPI.useProcessVideoMutation();
 
   useEffect(() => {
     if (videoBlob) {
@@ -40,21 +42,76 @@ const EditorPage: FC<EditorProps> = ({ id, title, duration }) => {
     }
   }, [videoBlob]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const formData = new FormData();
-      formData.append("file", file);
+  useEffect(() => {
+    if (processVideoBlob) {
+      console.log(processVideoBlob);
+      const url = URL.createObjectURL(processVideoBlob);
+      setFilePreview(url);
 
-      try {
-        const response = await uploadVideo({ formData, projectId: videoId || "" }).unwrap();
-        setFilePreview(response.filePath);
-        setUploadedFile(file);
-      } catch (err) {
-        console.error("Error uploading video:", err);
-      }
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    }
+  }, [processVideoBlob])
+
+  useEffect(() => {
+    const videoElement = videoRef.current;
+    if (videoElement) {
+      const handleTimeUpdate = () => setCurrentTime(videoElement.currentTime);
+      const handleMetadataLoaded = () => setVideoDuration(videoElement.duration);
+      setVolume(videoElement.volume);
+
+      videoElement.addEventListener("timeupdate", handleTimeUpdate);
+      videoElement.addEventListener("loadedmetadata", handleMetadataLoaded);
+
+      return () => {
+        videoElement.removeEventListener("timeupdate", handleTimeUpdate);
+        videoElement.removeEventListener("loadedmetadata", handleMetadataLoaded);
+      };
+    }
+  }, []);
+
+  const playVideo = () => {
+    if (videoRef.current) {
+      videoRef.current.play();
+      setIsPlaying(true);
     }
   };
+
+  const toggleVolume = () => {
+    if (videoRef.current) {
+      videoRef.current.volume = videoRef.current.volume > 0 ? 0 : 1;
+      setVolume(videoRef.current.volume);
+    }
+  }
+
+  const pauseVideo = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const splitVideo = async (timestamp: number) => {
+    try {
+      if (videoId) {
+        await processVideo({ id: videoId, type: VideoFilterType.INVERT, startTime: "00:00:00", duration: formatTime(timestamp) });
+      }
+    } catch (err) {
+    }
+    console.log(formatTime(timestamp));
+  };
+
+  const processFilterVideo = async (filterType: VideoFilterType) => {
+    try {
+      if (videoId) {
+        console.log("start");
+        await processVideo({ id: videoId, type: filterType });
+      }
+    } catch (err) {
+      console.error("Error deleting video:", err);
+    }
+  }
 
   if (!videoId && !filePreview) {
     return (
@@ -63,16 +120,6 @@ const EditorPage: FC<EditorProps> = ({ id, title, duration }) => {
           Upload Video
         </Typography>
         <Box sx={{ mt: 4, display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <Button variant="contained" component="label">
-            Choose Video
-            <input type="file" accept="video/*" hidden onChange={handleFileChange} />
-          </Button>
-          {isUploading && <CircularProgress sx={{ mt: 2 }} />}
-          {uploadError && (
-            <Typography color="error" variant="body1" sx={{ mt: 2 }}>
-              Failed to upload video
-            </Typography>
-          )}
         </Box>
       </Container>
     );
@@ -114,53 +161,59 @@ const EditorPage: FC<EditorProps> = ({ id, title, duration }) => {
     );
   }
 
-  const handleChange = (event: Event | React.SyntheticEvent, newValue: number | number[]) => {
-    setInterval(newValue as [number, number]); // Update the interval
-  };
+  const menuItems = [
+    { text: "Grayscale", onclick: () => processFilterVideo(VideoFilterType.GRAYSCALE) },
+    { text: "Invert Colors", onclick: () => processFilterVideo(VideoFilterType.INVERT) },
+    { text: "Blur", onclick: () => processFilterVideo(VideoFilterType.BLUR) }
+  ];
 
-  const formatTime = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
+  const intrumentItems = [
+    { icon: <SaveIcon/>, onclick: ()=>{} },
+    { icon: <DownloadIcon/>, onclick: ()=>{} }
+  ]
 
   return (
     <Container sx={{ py: 4 }}>
-      <Typography variant="h3" gutterBottom>
-        {videoId ? "Edit Video" : "Upload Video"}
-      </Typography>
+      <Box sx={{ display: "flex", flexDirection: "row", gap: 1 }}>
+        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+          <FiltersPanel menuItems={menuItems} />
+        </Box>
 
-      <Box sx={{ mt: 4, display: "flex", flexDirection: "column", alignItems: "center" }}>
-        {filePreview && (
-          <Card sx={{ mb: 4 }}>
-            <CardMedia
-              component="video"
-              src={filePreview}
-              controls
-              sx={{ height: 400 }}
-            />
-            <CardContent>
-              <Typography variant="h6">{uploadedFile ? uploadedFile.name : "Existing Video"}</Typography>
-            </CardContent>
-          </Card>
-        )}
+        <Box sx={{ mt: 4, display: "flex", flexDirection: "column", alignItems: "center" }}>
+          {filePreview && (
+            <Card sx={{ mb: 4 }}>
+              <video
+                ref={videoRef}
+                src={filePreview}
+                controls={false}
+                style={{ width: "100%", height: "400px" }}
+              />
+            </Card>
+          )}
+        </Box>
 
-        <Button variant="contained" component="label">
-          {videoId ? "Replace Video" : "Upload Video"}
-          <input type="file" accept="video/*" hidden onChange={handleFileChange} />
-        </Button>
-        {isUploading && <CircularProgress sx={{ mt: 2 }} />}
-        {uploadError && (
-          <Typography color="error" variant="body1" sx={{ mt: 2 }}>
-            Failed to upload video
-          </Typography>
-        )}
+        <InstrumentPanel menuItems={intrumentItems}/>
       </Box>
-      <VideoTimeline
-        duration={videoDuration}
-        steps={10} value={interval}
-        onChange={handleChange}
-        formatTime={formatTime} />
+      <Control
+        playVideo={playVideo}
+        pauseVideo={pauseVideo}
+        toggleVolume={toggleVolume}
+        volume={volume}
+        setVolume={setVolume}
+        isPlaying={isPlaying}
+        currentTime={currentTime}
+        projectDuration={videoDuration}
+        setCurrentTime={(timestamp) => {
+          if (videoRef.current) {
+            videoRef.current.currentTime = timestamp;
+            setCurrentTime(timestamp);
+          }
+        }}
+        splitVideo={splitVideo}
+        setScaleFactor={setScaleFactor}
+        scaleFactor={scaleFactor}
+        skipInterval={5}
+      />
     </Container>
   );
 };

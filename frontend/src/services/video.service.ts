@@ -1,4 +1,4 @@
-import { IVideo } from "../interfaces/video.interface";
+import { IVideo, VideoFilterType } from "../interfaces/video.interface";
 import mainApi from "./main.api";
 
 const enchancedApi = mainApi.enhanceEndpoints({
@@ -18,16 +18,15 @@ export const videoAPI = enchancedApi.injectEndpoints({
       }),
       invalidatesTags: ["Video"],
     }),
-    fetchVideoById: builder.query<Blob, string>({ // Повертаємо Blob
-      query: (videoId) => ({
+    fetchVideoById: builder.query({
+      query: (id) => ({
+        url: `video/${id}`,
+        method: 'GET',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Range: 'bytes=0-',
         },
-        url: `/video/${videoId}`,
-        method: "GET",
         responseHandler: (response) => response.blob(),
       }),
-      providesTags: ["Video"],
     }),
     fetchVideosByProject: builder.query<IVideo[], string>({
       query: (projectId) => ({
@@ -48,6 +47,18 @@ export const videoAPI = enchancedApi.injectEndpoints({
         method: "DELETE",
       }),
       invalidatesTags: ["Video"],
+    }),
+    processVideo: builder.mutation<Blob, { id: string; type: VideoFilterType; startTime?: string; duration?: string }>({
+      query: ({ id, type, startTime, duration }) => ({
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          "Content-Type": "application/json",
+        },
+        url: `/video/process/${id}`,
+        method: "POST",
+        body: { type, startTime, duration },
+        responseHandler: (response) => response.blob(),
+      }),
     }),
   })
 });

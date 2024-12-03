@@ -19,6 +19,10 @@ export class Video extends Model {
 
     @AllowNull(false)
     @Column(DataType.STRING)
+    thumbnailPath: string;
+
+    @AllowNull(false)
+    @Column(DataType.STRING)
     duration: number;
 
     @AllowNull(false)

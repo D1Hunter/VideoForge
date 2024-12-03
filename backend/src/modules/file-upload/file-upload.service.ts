@@ -5,8 +5,8 @@ import { v4 } from 'uuid';
 
 @Injectable()
 export class FileUploadService {
-    
-    async uploadFile(file: Express.Multer.File, dirPath: string){
+
+    async uploadFile(file: Express.Multer.File, dirPath: string) {
         const filePath = await this.generateFileName(file, dirPath);
         await fs.promises.access(dirPath).catch(async () => {
             await fs.promises.mkdir(dirPath, { recursive: true });
@@ -15,9 +15,9 @@ export class FileUploadService {
         return filePath;
     }
 
-    async uploadFiles(files: Express.Multer.File[], dirPath): Promise<string[]>{
+    async uploadFiles(files: Express.Multer.File[], dirPath): Promise<string[]> {
         const filesPath = [];
-        files.forEach(file=>filesPath.push(this.generateFileName(file, dirPath)));
+        files.forEach(file => filesPath.push(this.generateFileName(file, dirPath)));
         await fs.promises.access(dirPath).catch(async () => {
             await fs.promises.mkdir(dirPath, { recursive: true });
         });
@@ -25,7 +25,7 @@ export class FileUploadService {
         return filesPath;
     }
 
-    generateFileName(file: Express.Multer.File, dirPath: string){
+    generateFileName(file: Express.Multer.File, dirPath: string) {
         const extension = file.originalname.split('.').pop();
         let filePath: string;
         const fileName = v4();
@@ -33,7 +33,7 @@ export class FileUploadService {
         return filePath;
     }
 
-    async deleteFile(filePath:string){
+    async deleteFile(filePath: string) {
         try {
             await fs.promises.access(filePath);
             await fs.promises.unlink(filePath);
@@ -43,8 +43,8 @@ export class FileUploadService {
         }
     }
 
-    async deleteFiles(filesPath: string[]){
-        for(const filePath of filesPath){
+    async deleteFiles(filesPath: string[]) {
+        for (const filePath of filesPath) {
             try {
                 await fs.promises.access(filePath);
                 await fs.promises.unlink(filePath);
@@ -55,12 +55,18 @@ export class FileUploadService {
         return true;
     }
 
-    async getFile(filePath:string): Promise<Buffer | null> {
+    async getFile(filePath: string): Promise<Buffer | null> {
         try {
             await fs.promises.access(filePath);
             return await fs.promises.readFile(filePath);
         } catch {
             return null;
         }
+    }
+
+    async ensureOutputDir(outputDir: string): Promise<void> {
+        await fs.promises.access(outputDir).catch(async () => {
+            await fs.promises.mkdir(outputDir, { recursive: true });
+        });
     }
 }

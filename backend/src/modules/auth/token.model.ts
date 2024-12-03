@@ -10,6 +10,6 @@ export class Token extends Model {
 
     @ForeignKey(()=>User)
     @AllowNull(false)
-    @Column({type: DataType.STRING})
+    @Column({type: DataType.UUID})
     userId:string;
 }

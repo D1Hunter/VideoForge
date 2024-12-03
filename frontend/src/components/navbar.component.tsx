@@ -1,6 +1,6 @@
 import { InfoOutlined, Menu } from "@mui/icons-material";
 import { AppBar, Box, IconButton, Toolbar } from "@mui/material";
-import { UserMenu } from "./user.menu.component";
+import { UserMenu } from "./user-menu.component";
 import { useAppSelector } from "../hooks/redux";
 
 export const NavBar = () => {

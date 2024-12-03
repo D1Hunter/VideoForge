@@ -1,5 +1,5 @@
 import { AddCircleOutline, Delete, Edit } from "@mui/icons-material";
-import { Box, Button, Card, CardContent, CardMedia, Container, Grid2 as Grid, IconButton, Typography } from "@mui/material"
+import { Card, CardContent, Container, Grid2 as Grid, IconButton, Typography } from "@mui/material"
 import AddProjectPopup from "./components/add-popup";
 import { useState } from "react";
 import { IProject } from "../../interfaces/project.interface";
@@ -87,8 +87,6 @@ const Dashboard = () => {
               </Card>
             </Grid>
           ))}
-
-          {/* Add New Project Card */}
           <Grid sx={{ xs: 12, sm: 6, md: 3 }}>
             <Card
               sx={{
