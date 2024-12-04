@@ -173,9 +173,9 @@ const EditorPage: FC<EditorProps> = ({ duration }) => {
   ]
 
   return (
-    <Container sx={{ py: 4 }}>
-      <Box sx={{ display: "flex", flexDirection: "row", gap: 1 }}>
-        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+    <Box sx={{margin:"0", padding:"10px", width:"100%", maxWidth:"100%"}}>
+      <Box sx={{ display: "flex", flexDirection: "row", gap: 1, justifyContent:"space-between" }}>
+        <Box sx={{ maxWidth:"300px"}}>
           <FiltersPanel menuItems={menuItems} />
         </Box>
 
@@ -214,7 +214,7 @@ const EditorPage: FC<EditorProps> = ({ duration }) => {
         scaleFactor={scaleFactor}
         skipInterval={5}
       />
-    </Container>
+    </Box>
   );
 };
 

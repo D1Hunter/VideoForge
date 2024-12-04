@@ -31,7 +31,6 @@ const FiltersPanel: FC<FiltersPanelProps> = ({
         {menuItems.map((item, index) => (
           <ListItem key={index} disablePadding>
             <ListItemButton onClick={item.onclick}>
-              <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.text} />
             </ListItemButton>
           </ListItem>

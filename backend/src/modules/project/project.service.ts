@@ -21,7 +21,7 @@ export class ProjectService {
         return this.prjectRepository.findOneById(id);
     }
 
-    async deleteProject(id: string): Promise<number> {
+    async deleteProject(id: string) {
         return this.prjectRepository.delete(id);
     }
 }

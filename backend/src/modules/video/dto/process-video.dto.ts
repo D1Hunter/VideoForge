@@ -1,9 +1,14 @@
 import { IsEnum, IsOptional, IsString, ValidateNested } from "class-validator";
 import { VideoFilterType } from "../filter-type.enum";
+import { VideoOperationType } from "../video-operation.enum";
 
 export class ProcessVideoDto {
+    @IsEnum(VideoOperationType)
+    operationType: VideoOperationType;
+
+    @IsOptional()
     @IsEnum(VideoFilterType)
-    type: VideoFilterType;
+    filterType?: VideoFilterType;
 
     @IsOptional()
     @IsString()

@@ -28,7 +28,7 @@ export class ProjectController {
     @Delete(':id')
     @UseGuards(JwtAuthGuard)
     async deleteProject(@Param('id') id: string) {
-        console.log("Delete project");
+        console.log(id);
         return this.projectService.deleteProject(id);
     }
 }

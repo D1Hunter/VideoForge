@@ -23,11 +23,15 @@ export class Video extends Model {
 
     @AllowNull(false)
     @Column(DataType.STRING)
-    duration: number;
+    duration: string;
 
     @AllowNull(false)
     @Column(DataType.INTEGER)
     fileSize: number;
+
+    @AllowNull(false)
+    @Column(DataType.STRING)
+    mimetype: string;
 
     @ForeignKey(() => Project)
     @AllowNull(false)

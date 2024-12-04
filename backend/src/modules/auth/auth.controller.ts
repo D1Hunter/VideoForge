@@ -17,7 +17,6 @@ export class AuthController {
   @Post('register')
   @HttpCode(HttpStatus.OK)
   async register(@Body() dto: RegisterUserDto) {
-    console.log(dto);
     dto = registerUserMapper.fromFrontToController(dto);
     const newUser = await this.authService.register(dto);
     const accessToken = await this.tokenService.generateAccessToken({

@@ -6,7 +6,7 @@ interface VideoCardProps {
       id?: string;
       title?: string;
       file: File|null;
-      thumbnail: string;
+      thumbnailPath: string;
       duration: number;
     };
     onEdit: (id?: string) => void;
@@ -26,7 +26,7 @@ interface VideoCardProps {
       <Card>
         <CardMedia
           component="img"
-          src={video.thumbnail}
+          src={`${'http://localhost:8080'}/${video.thumbnailPath}`}
           alt={`Thumbnail for ${video.title || video.file?.name}`}
           sx={{ height: 200, objectFit: "cover" }}
         />

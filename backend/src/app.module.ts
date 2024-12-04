@@ -14,6 +14,7 @@ import { ProjectModule } from './modules/project/project.module';
 import { VideoModule } from './modules/video/video.module';
 import { Video } from './modules/video/video.model';
 import { FileUploadModule } from './modules/file-upload/file-upload.module';
+import { FFmpegModule } from './modules/ffmpeg/ffmpeg.module';
 
 @Module({
   imports: [
@@ -46,7 +47,8 @@ import { FileUploadModule } from './modules/file-upload/file-upload.module';
     AuthModule,
     ProjectModule,
     VideoModule,
-    FileUploadModule],
+    FileUploadModule,
+    FFmpegModule],
   providers: [JwtStrategy],
 })
 

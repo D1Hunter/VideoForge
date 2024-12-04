@@ -9,7 +9,7 @@ import VideoCard from "./components/video-card";
 
 interface VideoData {
   file: File | null;
-  thumbnail: string;
+  thumbnailPath: string;
   id?: string;
   title?: string;
   duration: number;
@@ -35,7 +35,7 @@ const ProjectPage = () => {
       const mappedVideos = videos.map((video: IVideo) => (
         {
           file: null,
-          thumbnail: video.thumbnailPath,
+          thumbnailPath: video.thumbnailPath,
           id: video.id,
           title: video.title,
           duration: video.duration
@@ -57,7 +57,7 @@ const ProjectPage = () => {
           ...prev,
           {
             file,
-            thumbnail: "",
+            thumbnailPath: "",
             duration: 100
           },
         ]);

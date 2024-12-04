@@ -4,5 +4,6 @@ export class CreateVideoDto {
     readonly thumbnailPath: string;
     readonly duration: number;
     readonly fileSize: number;
+    readonly mimetype: string;
     readonly projectId: string;
 }  

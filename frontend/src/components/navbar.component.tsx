@@ -6,7 +6,7 @@ import { useAppSelector } from "../hooks/redux";
 export const NavBar = () => {
     const { email } = useAppSelector(state => state.userReducer.user)
     return (
-        <Box display="flex" justifyContent="space-between" p={2} width="97%">
+        <Box display="flex" justifyContent="space-between" p={2} width="100%">
           <AppBar position="static" elevation={4}>
             <Toolbar
               sx={{
