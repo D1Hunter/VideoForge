@@ -1,6 +1,7 @@
 export enum VideoFilterType {
     GRAYSCALE = 'grayscale',
     INVERT = 'invert',
-    CROP = 'crop',
-    BLUR = 'blur'
+    BLUR = 'blur',
+    GLITCH_EFFECT = 'glich_effect',
+    CARTOONIZE = 'cartoonize'
 }

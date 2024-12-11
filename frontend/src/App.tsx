@@ -10,8 +10,6 @@ import { setUser } from './store/reducers/user-slice'
 import Dashboard from './pages/dashboard/dashboard'
 import ProjectPage from './pages/project/project.page'
 import VideoEditorPage from './pages/video-editor/video-editor.page'
-import ImageUploadPage from './pages/image/image-upload'
-import VideoPlayer from './pages/video-player/video-player'
 
 function App() {
   const dispatch = useAppDispatch();

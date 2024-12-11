@@ -5,35 +5,67 @@ import { useState } from "react";
 import { IProject } from "../../interfaces/project.interface";
 import { projectAPI } from "../../services/project.service";
 import { useNavigate } from "react-router-dom";
+import EditProjectPopup from "./components/edit-popup";
+import DeleteConfirmationDialog from "../../components/delete-dialog.component";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [openPopup, setOpenPopup] = useState(false);
+  const [openAddPopup, setOpenAddPopup] = useState(false);
+  const [openEditPopup, setOpenEditPopup] = useState(false);
+  const [openDeletePopup, setOpenDeletePopup] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [editProjectData, setEditProjectData] = useState<IProject | null>(null);
   const { data: projects = [], refetch } = projectAPI.useFetchProjectsQuery(null);
   const [addProject] = projectAPI.useAddProjectMutation();
+  const [editProject] = projectAPI.useUpdateProjectMutation();
   const [deleteProject] = projectAPI.useDeleteProjectMutation();
 
-  const handleAddProject = async (newProject: Omit<IProject, "id"|"createdAt">) => {
+  const handleAddProject = async (newProject: Omit<IProject, "id" | "createdAt">) => {
     try {
       await addProject(newProject).unwrap();
-      setOpenPopup(false);
+      setOpenAddPopup(false);
       refetch();
     } catch (err) {
       console.error("Error adding project:", err);
     }
   };
 
-  const handleEditProject = (id:string) => {
-    console.log(`Edit project ${id}`);
+  const handleEditProject = (project: IProject) => {
+    setEditProjectData(project);
+    setOpenEditPopup(true);
   };
 
-  const handleDeleteProject = async (id:string) => {
+  const handleDeleteProject = async () => {
     try {
-      await deleteProject(id).unwrap();
-    } catch (err) {
+      if (selectedProjectId) {
+        await deleteProject(selectedProjectId).unwrap();
+        refetch();
+      }
+    }
+    catch (err) {
       console.error("Error deleting project:", err);
+    } finally {
+      setOpenDeletePopup(false);
+      setSelectedProjectId(null);
     }
   };
+
+  const handleDeleteProjectConfirmation = (id: string) => {
+    setSelectedProjectId(id);
+    setOpenDeletePopup(true);
+  };
+
+  const handleSaveEditedProject = async (updatedProject: IProject) => {
+    try {
+      await editProject(updatedProject).unwrap();
+      console.log("Edited")
+      setOpenEditPopup(false);
+      refetch();
+    } catch (err) {
+      console.error("Error editing project:", err);
+    }
+  };
+
 
   const cardStyle = {
     display: "flex",
@@ -44,7 +76,7 @@ const Dashboard = () => {
     minWidth: "150px",
     cursor: "pointer",
     boxShadow: "0px 2px 5px rgba(0,0,0,0.1)",
-    bgcolor:"#e0dede"
+    bgcolor: "#e0dede"
   };
 
   return (
@@ -70,7 +102,7 @@ const Dashboard = () => {
                     color="primary"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleEditProject(project.id);
+                      handleEditProject(project);
                     }}
                   >
                     <Edit />
@@ -79,7 +111,7 @@ const Dashboard = () => {
                     color="error"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDeleteProject(project.id);
+                      handleDeleteProjectConfirmation(project.id);
                     }}
                   >
                     <Delete />
@@ -100,7 +132,7 @@ const Dashboard = () => {
                   transform: 'scale(1.1)',
                 },
               }}
-              onClick={() => setOpenPopup(true)}
+              onClick={() => setOpenAddPopup(true)}
             >
               <AddCircleOutline fontSize="large" color="action" />
               <Typography variant="h6" color="text.secondary" sx={{ mt: 1 }}>
@@ -111,9 +143,24 @@ const Dashboard = () => {
         </Grid>
       </Container>
       <AddProjectPopup
-        open={openPopup}
-        onClose={() => setOpenPopup(false)}
+        open={openAddPopup}
+        onClose={() => setOpenAddPopup(false)}
         onAddProject={handleAddProject}
+      />
+      {editProjectData && (
+        <EditProjectPopup
+          open={openEditPopup}
+          project={editProjectData}
+          onClose={() => setOpenEditPopup(false)}
+          onSave={handleSaveEditedProject}
+        />
+      )}
+      <DeleteConfirmationDialog
+        open={openDeletePopup}
+        onClose={() => setOpenDeletePopup(false)}
+        onConfirm={handleDeleteProject}
+        title="Delete Project"
+        description="Are you sure you want to delete this project? This action cannot be undone."
       />
     </>
   );

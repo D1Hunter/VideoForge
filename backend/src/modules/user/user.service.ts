@@ -36,7 +36,7 @@ export class UserService {
     return this.userRepository.create({ ...dto });
   }
 
-  async update(id:string, dto:UpdateUserDto) {
+  async update(id:string, dto:UpdateUserDto): Promise<User>  {
     const user = await this.userRepository.findOneById(id);
     if(!user){
       throw new NotFoundException('User with this id is not exist');
@@ -44,7 +44,7 @@ export class UserService {
     return this.userRepository.update(user,{...dto});
   }
 
-  delete(id: string) {
+  delete(id: string): Promise<Number> {
     return this.userRepository.delete(id);
   }
 }

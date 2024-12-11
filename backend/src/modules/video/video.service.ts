@@ -7,6 +7,9 @@ import { Video } from "./video.model";
 import { FFmpegService } from "../ffmpeg/ffmpeg.service";
 import { FileUploadService } from "../file-upload/file-upload.service";
 import { ProcessVideoDto } from "./dto/process-video.dto";
+import * as crypto from 'crypto';
+import * as path from 'path';
+import { STATIC_FOLDER_PATH } from "../../paths/paths";
 
 @Injectable()
 export class VideoService {
@@ -35,19 +38,38 @@ export class VideoService {
     async deleteVideoById(id: string): Promise<void> {
         const video = await this.videoRepository.findOneById(id);
         if (!video) throw new NotFoundException('Video not found');
-    
+
         const filePath = video.filePath;
         if (!(await this.fileUploadService.getFile(filePath))) {
             throw new NotFoundException('Video file not found');
         }
         await this.fileUploadService.deleteFile(filePath);
-    
+
         const thumbnailPath = video.thumbnailPath;
         if (await this.fileUploadService.getFile(thumbnailPath)) {
             await this.fileUploadService.deleteFile(thumbnailPath);
         }
-    
+
         await this.deleteVideo(video.id);
+    }
+
+    decryptAES_CBC(encryptedBuffer: Buffer, key: Uint8Array): Buffer {
+        const iv = encryptedBuffer.slice(0, 16);
+        const encryptedData = encryptedBuffer.slice(16);
+
+        const decipher = crypto.createDecipheriv('aes-128-cbc', key, iv);
+        const decrypted = Buffer.concat([decipher.update(encryptedData), decipher.final()]);
+        return decrypted;
+    }
+
+    encryptAES_CBC(data: Buffer, key: Uint8Array): Buffer {
+        const iv = crypto.randomBytes(16);
+
+        const cipher = crypto.createCipheriv('aes-128-cbc', key, iv);
+
+        const encryptedData = Buffer.concat([cipher.update(data), cipher.final()]);
+
+        return Buffer.concat([iv, encryptedData]);
     }
 
     async handleVideoUpload(
@@ -56,7 +78,11 @@ export class VideoService {
         projectId: string,
         staticFolderPath: string
     ): Promise<{ message: string }> {
-        const filesPath = await this.fileUploadService.uploadFile(file, `${staticFolderPath}/${userId}`);
+        const key = new TextEncoder().encode(process.env.SECRET_KEY);
+
+        const decryptedData = this.decryptAES_CBC(file.buffer, key);
+
+        const filesPath = await this.fileUploadService.uploadBuffer(decryptedData, file.originalname, `${staticFolderPath}/${userId}`);
 
         const outputDir = `${staticFolderPath}/${userId}/thumbnails`;
         await this.fileUploadService.ensureOutputDir(outputDir);
@@ -70,7 +96,7 @@ export class VideoService {
             title: fileNameWithoutExtension,
             duration: duration,
             filePath: filesPath,
-            thumbnailPath: thumbnailPath,
+            thumbnailPath: path.relative(STATIC_FOLDER_PATH, thumbnailPath),
             fileSize: Math.round(file.size / 1024),
             mimetype: file.mimetype,
             projectId: projectId,
@@ -84,14 +110,13 @@ export class VideoService {
         userId: string,
         dto: ProcessVideoDto,
         staticFolderPath: string,
+        req: Request,
         res: Response
     ): Promise<void> {
-        console.log("Start");
         const video = await this.findVideoById(videoId);
         if (!video) {
             throw new NotFoundException('Video not found');
         }
-        console.log("File");
         const file = await this.fileUploadService.getFile(video.filePath);
         if (!file) {
             throw new NotFoundException('Video file not found');
@@ -100,11 +125,26 @@ export class VideoService {
         const outputDir = `${staticFolderPath}/${userId}/temp`;
         await this.fileUploadService.ensureOutputDir(outputDir);
 
-        const filePath = await this.ffMpegService.processVideo(video.filePath, dto, outputDir);
+        const videoPath = await this.ffMpegService.processVideo(video.filePath, dto, outputDir);
 
-        const videoStream = fs.createReadStream(filePath);
-        res.setHeader('Content-Type', 'video/mp4');
-        videoStream.pipe(res);
+        const videoRange = req.headers.range;
+        console.log(req.headers.range)
+
+        if (!videoRange) {
+            res.status(416).send('Requires Range header');
+            return;
+        }
+
+        const { stream, headers } = this.prepareVideoStream(videoPath, videoRange);
+        const iv = crypto.randomBytes(16);
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Expose-Headers', 'X-Encryption-IV');
+        res.setHeader('X-Encryption-IV', iv.toString('base64'));
+        res.writeHead(206, headers);
+
+        const key = new TextEncoder().encode(process.env.SECRET_KEY).slice(0, 16);
+        const cipher = crypto.createCipheriv('aes-128-cbc', key, iv);
+        stream.pipe(cipher).pipe(res);
     }
 
     async handleGetVideoById(
@@ -123,8 +163,6 @@ export class VideoService {
             throw new NotFoundException('Video file not found');
         }
 
-        const stat = fs.statSync(videoPath);
-        const fileSize = stat.size;
         const videoRange = req.headers.range;
 
         if (!videoRange) {
@@ -133,8 +171,15 @@ export class VideoService {
         }
 
         const { stream, headers } = this.prepareVideoStream(videoPath, videoRange);
+        const iv = crypto.randomBytes(16);
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Expose-Headers', 'X-Encryption-IV');
+        res.setHeader('X-Encryption-IV', iv.toString('base64'));
         res.writeHead(206, headers);
-        stream.pipe(res);
+
+        const key = new TextEncoder().encode(process.env.SECRET_KEY).slice(0, 16);
+        const cipher = crypto.createCipheriv('aes-128-cbc', key, iv);
+        stream.pipe(cipher).pipe(res);
     }
 
     private prepareVideoStream(videoPath: string, videoRange: string) {

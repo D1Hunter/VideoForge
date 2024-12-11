@@ -51,11 +51,15 @@ export class FFmpegService {
                 return 'lutrgb=r=negval:g=negval:b=negval';
             case VideoFilterType.BLUR:
                 return 'boxblur=2:2';
+            case VideoFilterType.GLITCH_EFFECT:
+                return "format=yuv420p,geq='if(gt(random(1),0.9),255,lum(X,Y))':128:128";
+            case VideoFilterType.CARTOONIZE:
+                return "cellauto=s=1280x720:ratio=0.1,format=rgba,overlay=W-w:0"
             default:
                 throw new Error(`Unsupported filter type: ${filter}`);
         }
     }
-    
+
     async processVideo(
         videoPath: string,
         dto: ProcessVideoDto,

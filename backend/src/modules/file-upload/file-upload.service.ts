@@ -15,6 +15,17 @@ export class FileUploadService {
         return filePath;
     }
 
+    async uploadBuffer(buffer: Buffer, fileName: string, destinationPath: string): Promise<string> {
+        const filePath = await this.generateFileName({ originalname: fileName } as Express.Multer.File, destinationPath);
+        
+        await fs.promises.access(destinationPath).catch(async () => {
+            await fs.promises.mkdir(destinationPath, { recursive: true });
+        });
+
+        await fs.promises.writeFile(filePath, buffer);
+        return filePath;
+    }
+
     async uploadFiles(files: Express.Multer.File[], dirPath): Promise<string[]> {
         const filesPath = [];
         files.forEach(file => filesPath.push(this.generateFileName(file, dirPath)));

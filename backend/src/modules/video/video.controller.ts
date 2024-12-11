@@ -1,18 +1,16 @@
-import { Body, Controller, Delete, Get, Param, Post, UploadedFile, UseGuards, UseInterceptors, Res, NotFoundException, StreamableFile, Req } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, UploadedFile, UseGuards, UseInterceptors, Res, NotFoundException, StreamableFile, Req, HttpCode, HttpStatus } from "@nestjs/common";
 import { Request, Response } from 'express';
 import { VideoService } from "./video.service";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { FileUploadService } from "../file-upload/file-upload.service";
 import { STATIC_FOLDER_PATH } from "src/paths/paths";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import * as fs from 'fs';
 import { ProcessVideoDto } from "./dto/process-video.dto";
 
 @Controller('video')
 export class VideoController {
     constructor(
         private readonly videoService: VideoService,
-        private readonly fileUploadService: FileUploadService
     ) { }
 
     @Post('upload/:projectId')
@@ -29,17 +27,20 @@ export class VideoController {
 
     @Post('process/:id')
     @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.OK)
     async processVideo(
         @Req() req,
         @Param('id') id: string,
         @Body() dto: ProcessVideoDto,
         @Res() res: Response
     ) {
-        return await this.videoService.handleVideoProcessing(id, req.user.id, dto, STATIC_FOLDER_PATH, res);
+        console.log(dto);
+        return await this.videoService.handleVideoProcessing(id, req.user.id, dto, STATIC_FOLDER_PATH, req, res);
     }
 
     @Get(':id')
     async getVideoById(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
+        console.log("Aboba");
         await this.videoService.handleGetVideoById(id, req, res);
     }
 

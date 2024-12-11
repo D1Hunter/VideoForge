@@ -11,14 +11,11 @@ interface FiltersPanelProps {
   menuItems: MenuItem[];
 }
 
-const FiltersPanel: FC<FiltersPanelProps> = ({
-  menuItems
-}) => {
-
+const FiltersPanel: FC<FiltersPanelProps> = ({ menuItems }) => {
   return (
     <Box
       sx={{
-        bgcolor: "#f5f5f5",
+        bgcolor: "#cfcfcf",
         p: 2,
         borderRadius: "8px",
         boxShadow: "0px 2px 5px rgba(0,0,0,0.1)",
@@ -30,7 +27,19 @@ const FiltersPanel: FC<FiltersPanelProps> = ({
       <List>
         {menuItems.map((item, index) => (
           <ListItem key={index} disablePadding>
-            <ListItemButton onClick={item.onclick}>
+            <ListItemButton
+              onClick={item.onclick}
+              sx={{
+                border: "2px solid #1976d2",
+                borderRadius: "8px",
+                mb: 1,
+                backgroundColor: "#ffffff",
+                "&:hover": {
+                  borderColor: "#115293",
+                  backgroundColor: "#e3f2fd",
+                },
+              }}
+            >
               <ListItemText primary={item.text} />
             </ListItemButton>
           </ListItem>

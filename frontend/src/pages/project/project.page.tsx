@@ -6,9 +6,11 @@ import { videoAPI } from "../../services/video.service";
 import { IVideo } from "../../interfaces/video.interface";
 import { formatVideoDuration, getFileNameWithoutExtension } from "./helpers/helpers";
 import VideoCard from "./components/video-card";
+import { encryptFile } from "../../utils/aes";
 
 interface VideoData {
   file: File | null;
+  fileSize: number;
   thumbnailPath: string;
   id?: string;
   title?: string;
@@ -32,9 +34,11 @@ const ProjectPage = () => {
 
   useEffect(() => {
     if (videos) {
+      console.log(videos);
       const mappedVideos = videos.map((video: IVideo) => (
         {
           file: null,
+          fileSize: video.fileSize,
           thumbnailPath: video.thumbnailPath,
           id: video.id,
           title: video.title,
@@ -49,7 +53,15 @@ const ProjectPage = () => {
       const file = e.target.files[0];
 
       const formData = new FormData();
-      formData.append("file", file);
+      const startJS = performance.now();
+      const encryptedResult= await encryptFile(file)
+      const endJS = performance.now();
+      console.log(`JavaScript Execution Time: ${endJS - startJS} ms`);
+      if(!encryptedResult){return}
+      const { encryptedData, iv } = encryptedResult;
+      const encryptedBlob = new Blob([iv, encryptedData], { type: file.type });
+      formData.append("file", encryptedBlob, file.name);
+      console.log(formData.get("file"));
       try {
         const id = projectId || "";
         await uploadVideo({ formData, projectId: id }).unwrap();
@@ -58,7 +70,8 @@ const ProjectPage = () => {
           {
             file,
             thumbnailPath: "",
-            duration: 100
+            duration: 100,
+            fileSize:10
           },
         ]);
       } catch (err) {

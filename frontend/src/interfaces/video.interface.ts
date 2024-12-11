@@ -6,9 +6,3 @@ export interface IVideo{
     thumbnailPath:string;
     createdAt:string;
 }
-
-export enum VideoFilterType {
-    GRAYSCALE = 'grayscale',
-    INVERT = 'invert',
-    BLUR = 'blur'
-}
